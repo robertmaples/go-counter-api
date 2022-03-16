@@ -15,19 +15,31 @@ type counter struct {
 var counters = []counter{
 	{ID: "5ca44aab-ee12-4911-925c-329175c0d1a0", Value: 50},
 	{ID: "d09b11a1-3ef8-47f6-a4de-620e7cabdc1a", Value: 100},
-	{ID: "d09b11a1-3ef8-47f6-a4de-620e7cabdc1a", Value: 200},
+	{ID: "fbe31350-31db-4117-9a60-4e33eb184f65", Value: 200},
+}
+
+func setupRouter() *gin.Engine {
+	r := gin.Default()
+
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
+	})
+	r.GET("/counters", getCounters)
+	r.GET("/counter/:id", getCounterByID)
+	r.POST("/counter", createCounter)
+	r.POST("/counter/:id", incrementCounter)
+	r.DELETE("/counter/:id", deleteCounter)
+
+	return r
 }
 
 func main() {
-	router := gin.Default()
+	router := setupRouter()
 
-	router.GET("/counters", getCounters)
-	router.GET("/counter/:id", getCounterByID)
-	router.POST("/counter", postCounter)
-	router.POST("/counter/:id", incrementCounter)
-	router.DELETE("/counter/:id", deleteCounter)
-
-	router.Run("localhost:8080")
+	err := router.Run("localhost:8080")
+	if err != nil {
+		return
+	}
 }
 
 // getCounters responds with the list of all counters as JSON.
@@ -35,8 +47,8 @@ func getCounters(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, counters)
 }
 
-// postCounter adds a counter from JSON received in the request body.
-func postCounter(c *gin.Context) {
+// createCounter adds a counter from JSON received in the request body.
+func createCounter(c *gin.Context) {
 	id := uuid.New()
 
 	newCounter := counter{ID: id.String(), Value: 0}
@@ -64,10 +76,10 @@ func getCounterByID(c *gin.Context) {
 func incrementCounter(c *gin.Context) {
 	id := c.Param("id")
 
-	for _, counter := range counters {
-		if counter.ID == id {
-			counter.Value += 1
-			c.IndentedJSON(http.StatusOK, counter)
+	for i, count := range counters {
+		if count.ID == id {
+			counters[i].Value++
+			c.IndentedJSON(http.StatusOK, counters[i])
 			return
 		}
 	}
@@ -79,10 +91,10 @@ func incrementCounter(c *gin.Context) {
 func deleteCounter(c *gin.Context) {
 	id := c.Param("id")
 
-	for i, counter := range counters {
-		if counter.ID == id {
+	for i, count := range counters {
+		if count.ID == id {
 			counters = append(counters[:i], counters[i+1:]...)
-			c.IndentedJSON(http.StatusOK, counter)
+			c.IndentedJSON(http.StatusOK, count)
 			return
 		}
 	}
