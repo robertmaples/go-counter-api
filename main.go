@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -10,6 +12,12 @@ import (
 type counter struct {
 	ID    string `json:"id"`
 	Value int    `json:"value"`
+}
+
+type Counter struct {
+	gorm.Model
+	ID    string `gorm:"uniqueIndex"`
+	Value int
 }
 
 var counters = []counter{
@@ -34,10 +42,22 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
-	router := setupRouter()
+	db, dbErr := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if dbErr != nil {
+		panic("failed to connect database")
+	}
 
-	err := router.Run("localhost:8080")
-	if err != nil {
+	// Migrate the schema
+	db.AutoMigrate(&[]Counter{})
+
+	// Populate db
+	db.Create(&Counter{ID: "5ca44aab-ee12-4911-925c-329175c0d1a0", Value: 50})
+	db.Create(&Counter{ID: "d09b11a1-3ef8-47f6-a4de-620e7cabdc1a", Value: 100})
+	db.Create(&Counter{ID: "fbe31350-31db-4117-9a60-4e33eb184f65", Value: 200})
+
+	router := setupRouter()
+	routerErr := router.Run("localhost:8080")
+	if routerErr != nil {
 		return
 	}
 }
