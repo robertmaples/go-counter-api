@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/driver/sqlite"
@@ -8,22 +9,11 @@ import (
 	"net/http"
 )
 
-// TODO: make id unique value
-type counter struct {
-	ID    string `json:"id"`
-	Value int    `json:"value"`
-}
-
+// TODO: Make id unique
 type Counter struct {
 	gorm.Model
-	ID    string `gorm:"uniqueIndex"`
-	Value int
-}
-
-var counters = []counter{
-	{ID: "5ca44aab-ee12-4911-925c-329175c0d1a0", Value: 50},
-	{ID: "d09b11a1-3ef8-47f6-a4de-620e7cabdc1a", Value: 100},
-	{ID: "fbe31350-31db-4117-9a60-4e33eb184f65", Value: 200},
+	ID    string `gorm:"uniqueIndex" json:"id"`
+	Value int    `json:"value"`
 }
 
 func setupRouter() *gin.Engine {
@@ -50,11 +40,6 @@ func main() {
 	// Migrate the schema
 	db.AutoMigrate(&[]Counter{})
 
-	// Populate db
-	db.Create(&Counter{ID: "5ca44aab-ee12-4911-925c-329175c0d1a0", Value: 50})
-	db.Create(&Counter{ID: "d09b11a1-3ef8-47f6-a4de-620e7cabdc1a", Value: 100})
-	db.Create(&Counter{ID: "fbe31350-31db-4117-9a60-4e33eb184f65", Value: 200})
-
 	router := setupRouter()
 	routerErr := router.Run("localhost:8080")
 	if routerErr != nil {
@@ -64,28 +49,49 @@ func main() {
 
 // getCounters responds with the list of all counters as JSON.
 func getCounters(c *gin.Context) {
+	db, err := gorm.Open(sqlite.Open("test.db"))
+	if err != nil {
+		panic("failed to connect to database")
+	}
+
+	var counters []Counter
+	db.Find(&counters)
+	fmt.Println("{}", counters)
+
 	c.IndentedJSON(http.StatusOK, counters)
 }
 
 // createCounter adds a counter from JSON received in the request body.
 func createCounter(c *gin.Context) {
+	db, err := gorm.Open(sqlite.Open("test.db"))
+	if err != nil {
+		panic("failed to connect to database")
+	}
+
 	id := uuid.New()
+	newCounter := Counter{ID: id.String(), Value: 0}
 
-	newCounter := counter{ID: id.String(), Value: 0}
+	db.Create(&newCounter)
 
-	counters = append(counters, newCounter)
 	c.IndentedJSON(http.StatusCreated, newCounter)
 }
 
 // getCounterByID locates the counter with the id sent in by the request.
 func getCounterByID(c *gin.Context) {
+	db, err := gorm.Open(sqlite.Open("test.db"))
+	if err != nil {
+		panic("failed to connect to database")
+	}
+
 	id := c.Param("id")
 
-	for _, counter := range counters {
-		if counter.ID == id {
-			c.IndentedJSON(http.StatusOK, counter)
-			return
-		}
+	var counter Counter
+	db.Where("id = ?", id).Find(&counter)
+
+	// TODO: How best to confirm correct counter is found and return proper status
+	if counter.ID == id {
+		c.IndentedJSON(http.StatusOK, counter)
+		return
 	}
 
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "counter not found"})
@@ -94,14 +100,19 @@ func getCounterByID(c *gin.Context) {
 // incrementCounter locates the counter with the id sent in by the request and increments
 // its value by one.
 func incrementCounter(c *gin.Context) {
+	db, err := gorm.Open(sqlite.Open("test.db"))
+	if err != nil {
+		panic("failed to connect to database")
+	}
+
 	id := c.Param("id")
 
-	for i, count := range counters {
-		if count.ID == id {
-			counters[i].Value++
-			c.IndentedJSON(http.StatusOK, counters[i])
-			return
-		}
+	var counter Counter
+	db.Where("id = ?", id).Find(&counter).Update("value", counter.Value+1)
+
+	if counter.ID == id {
+		c.IndentedJSON(http.StatusOK, counter)
+		return
 	}
 
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "counter not found"})
@@ -109,14 +120,18 @@ func incrementCounter(c *gin.Context) {
 
 // deleteCounter locates the counter with the id sent in by the request and deletes it.
 func deleteCounter(c *gin.Context) {
+	db, err := gorm.Open(sqlite.Open("test.db"))
+	if err != nil {
+		panic("failed to connect to database")
+	}
+
 	id := c.Param("id")
 
-	for i, count := range counters {
-		if count.ID == id {
-			counters = append(counters[:i], counters[i+1:]...)
-			c.IndentedJSON(http.StatusOK, count)
-			return
-		}
+	var counter Counter
+	db.Where("id = ?", id).Find(&counter).Delete(&counter)
+	if counter.ID == id {
+		c.IndentedJSON(http.StatusOK, counter)
+		return
 	}
 
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "counter not found"})
