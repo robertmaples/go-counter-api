@@ -6,65 +6,68 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: Make id unique
+var db *gorm.DB
+
 type Counter struct {
-	gorm.Model
 	ID    string `gorm:"uniqueIndex" json:"id"`
 	Value int    `json:"value"`
 }
 
-func dbInit() *gorm.DB {
-	db, dbErr := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	if dbErr != nil {
-		panic("failed to connect database")
+func dbInit() error {
+	var dbErr error
+	db, dbErr = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+
+	// Migrate the schema
+	db.AutoMigrate(&[]Counter{})
+
+	return dbErr
+}
+
+func dbGetCounters() ([]Counter, error) {
+	var counters []Counter
+	res := db.Find(&counters)
+	if res.Error != nil {
+		return counters, res.Error
 	}
 
-	return db
+	return counters, nil
 }
 
-func dbGetCounters() []Counter {
-	db := dbInit()
-
-	var counters []Counter
-	db.Find(&counters)
-
-	return counters
-}
-
-func dbGetCounterById(id string) Counter {
-	db := dbInit()
-
+func dbGetCounterById(id string) (Counter, error) {
 	var counter Counter
-	db.Where("id = ?", id).Find(&counter)
+	if res := db.Where("id = ?", id).Find(&counter); res.Error != nil {
+		return counter, res.Error
+	}
 
-	return counter
+	return counter, nil
 }
 
-func dbCreateCounter() Counter {
-	db := dbInit()
-
+func dbCreateCounter() (Counter, error) {
 	id := uuid.New()
 	newCounter := Counter{ID: id.String(), Value: 0}
 
-	db.Create(&newCounter)
+	if res := db.Create(&newCounter); res.Error != nil {
+		return newCounter, res.Error
+	}
 
-	return newCounter
+	return newCounter, nil
 }
 
-func dbIncrementCounter(id string) Counter {
-	db := dbInit()
-
+func dbIncrementCounter(id string) (Counter, error) {
 	var counter Counter
-	db.Where("id = ?", id).Find(&counter).Update("value", counter.Value+1)
+	if res := db.Where("id = ?", id).Find(&counter).Update("value", counter.Value+1); res.Error != nil {
+		return counter, res.Error
+	}
 
-	return counter
+	return counter, nil
 }
 
-func dbDeleteCounter(id string) Counter {
-	db := dbInit()
-
+func dbDeleteCounter(id string) (Counter, error) {
 	var counter Counter
-	db.Where("id = ?", id).Find(&counter).Delete(&counter)
+	res := db.Where("id = ?", id).Find(&counter).Delete(&counter)
+	if res.Error != nil {
+		return counter, res.Error
+	}
 
-	return counter
+	return counter, nil
 }

@@ -1,10 +1,15 @@
 package main
 
-func main() {
-	db := dbInit()
+import (
+	"log"
+)
 
-	// Migrate the schema
-	db.AutoMigrate(&[]Counter{})
+func main() {
+	err := dbInit()
+
+	if err != nil {
+		log.Println(err.Error())
+	}
 
 	router := setupRouter()
 
