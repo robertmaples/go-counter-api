@@ -7,7 +7,10 @@ func main() {
 	db.AutoMigrate(&[]Counter{})
 
 	router := setupRouter()
-	routerErr := router.Run("localhost:8080")
+
+	router.LoadHTMLGlob("templates/*")
+
+	routerErr := router.Run()
 	if routerErr != nil {
 		return
 	}
