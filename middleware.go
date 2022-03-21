@@ -13,6 +13,7 @@ func setupRouter() *gin.Engine {
 		"robert": "password",
 	}))
 
+	authorized.GET("/", showIndexPage)
 	authorized.GET("/counters", getCounters)
 	authorized.GET("/counter/:id", getCounterByID)
 	authorized.POST("/counter", createCounter)

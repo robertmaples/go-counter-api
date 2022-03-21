@@ -4,13 +4,7 @@
 {{ template "header.html" .}}
 
 {{range .payload }}
-<!--Create the link for the article based on its ID-->
-<a href="/counter/view/{{.ID}}">
-    <!--Display the title of the article -->
-    <h2>{{.ID}}</h2>
-</a>
-<!--Display the content of the article-->
-<p>{{.Value}}</p>
+    <div style="display: flex"><div>{{.ID}}: {{.Value}}</div></div>
 {{end}}
 
 </body>

@@ -1,45 +1,41 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"net/http"
 )
 
+/**
+*	TODO: Create handlers to separate model/db from request response
+ */
+// show index page of conters
+func showIndexPage(c *gin.Context) {
+	counters := dbGetCounters()
+
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"title":   "Home Page",
+		"payload": counters})
+}
+
 // getCounters responds with the list of all counters as JSON.
 func getCounters(c *gin.Context) {
-	db := dbInit()
-
-	var counters []Counter
-	db.Find(&counters)
-	fmt.Println("{}", counters)
+	counters := dbGetCounters()
 
 	c.IndentedJSON(http.StatusOK, counters)
 }
 
 // createCounter adds a counter from JSON received in the request body.
 func createCounter(c *gin.Context) {
-	db := dbInit()
-
-	id := uuid.New()
-	newCounter := Counter{ID: id.String(), Value: 0}
-
-	db.Create(&newCounter)
+	newCounter := dbCreateCounter()
 
 	c.IndentedJSON(http.StatusCreated, newCounter)
 }
 
 // getCounterByID locates the counter with the id sent in by the request.
 func getCounterByID(c *gin.Context) {
-	db := dbInit()
-
 	id := c.Param("id")
 
-	var counter Counter
-	db.Where("id = ?", id).Find(&counter)
+	counter := dbGetCounterById(id)
 
 	// TODO: How best to confirm correct counter is found and return proper status
 	if counter.ID == id {
@@ -53,15 +49,9 @@ func getCounterByID(c *gin.Context) {
 // incrementCounter locates the counter with the id sent in by the request and increments
 // its value by one.
 func incrementCounter(c *gin.Context) {
-	db, err := gorm.Open(sqlite.Open("test.db"))
-	if err != nil {
-		panic("failed to connect to database")
-	}
-
 	id := c.Param("id")
 
-	var counter Counter
-	db.Where("id = ?", id).Find(&counter).Update("value", counter.Value+1)
+	counter := dbIncrementCounter(id)
 
 	if counter.ID == id {
 		c.IndentedJSON(http.StatusOK, counter)
@@ -73,12 +63,10 @@ func incrementCounter(c *gin.Context) {
 
 // deleteCounter locates the counter with the id sent in by the request and deletes it.
 func deleteCounter(c *gin.Context) {
-	db := dbInit()
 
 	id := c.Param("id")
+	counter := dbDeleteCounter(id)
 
-	var counter Counter
-	db.Where("id = ?", id).Find(&counter).Delete(&counter)
 	if counter.ID == id {
 		c.IndentedJSON(http.StatusOK, counter)
 		return

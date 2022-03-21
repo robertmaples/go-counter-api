@@ -8,7 +8,7 @@ func main() {
 
 	router := setupRouter()
 
-	//router.LoadHTMLGlob("templates/*")
+	router.LoadHTMLGlob("templates/*")
 
 	routerErr := router.Run()
 	if routerErr != nil {
