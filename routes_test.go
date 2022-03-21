@@ -26,6 +26,7 @@ func TestGetCounters(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/counters", nil)
+	req.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w, req)
 
 	var c []Counter
@@ -41,6 +42,7 @@ func TestGetCounterByID(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/counter/d09b11a1-3ef8-47f6-a4de-620e7cabdc1a", nil)
+	req.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w, req)
 
 	var c Counter
@@ -57,6 +59,7 @@ func TestCreateCounter(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/counter", nil)
+	req.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w, req)
 
 	var c Counter
@@ -73,6 +76,7 @@ func TestIncrementCounter(t *testing.T) {
 
 	w1 := httptest.NewRecorder()
 	req1, _ := http.NewRequest("POST", "/counter", nil)
+	req1.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w1, req1)
 
 	var c1 Counter
@@ -84,7 +88,9 @@ func TestIncrementCounter(t *testing.T) {
 	w2 := httptest.NewRecorder()
 	w3 := httptest.NewRecorder()
 	req2, _ := http.NewRequest("POST", url, nil)
+	req2.SetBasicAuth("robert", "password")
 	req3, _ := http.NewRequest("POST", url, nil)
+	req3.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w2, req2)
 	router.ServeHTTP(w3, req3)
 
@@ -102,6 +108,7 @@ func TestDeleteCounter(t *testing.T) {
 
 	w1 := httptest.NewRecorder()
 	req1, _ := http.NewRequest("POST", "/counter", nil)
+	req1.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w1, req1)
 
 	var c1 Counter
@@ -112,6 +119,7 @@ func TestDeleteCounter(t *testing.T) {
 
 	w2 := httptest.NewRecorder()
 	req2, _ := http.NewRequest("DELETE", url, nil)
+	req2.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w2, req2)
 
 	var c2 Counter
@@ -123,6 +131,7 @@ func TestDeleteCounter(t *testing.T) {
 
 	w3 := httptest.NewRecorder()
 	req3, _ := http.NewRequest("GET", "/counter/5ca44aab-ee12-4911-925c-329175c0d1a0", nil)
+	req3.SetBasicAuth("robert", "password")
 	router.ServeHTTP(w3, req3)
 
 	assert.Equal(t, 404, w3.Code)
