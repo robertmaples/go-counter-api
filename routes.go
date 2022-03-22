@@ -7,12 +7,13 @@ import (
 )
 
 // showIndexPage returns all counters
-func showIndexPage(c *gin.Context) {
-	counters, err := dbGetCounters()
+func (s server) index(c *gin.Context) {
+	counters, err := s.dbGetCounters()
 
 	if err != nil {
 		log.Println(err)
 		c.HTML(http.StatusNotFound, "index.html", gin.H{"title": "Home Page", "payload": counters})
+		return
 	}
 
 	c.HTML(http.StatusOK, "index.html", gin.H{
@@ -21,8 +22,8 @@ func showIndexPage(c *gin.Context) {
 }
 
 // getCounters responds with the list of all counters as JSON.
-func getCounters(c *gin.Context) {
-	counters, err := dbGetCounters()
+func (s server) getCounters(c *gin.Context) {
+	counters, err := s.dbGetCounters()
 
 	if err != nil {
 		log.Println(err)
@@ -33,8 +34,8 @@ func getCounters(c *gin.Context) {
 }
 
 // createCounter adds a counter from JSON received in the request body.
-func createCounter(c *gin.Context) {
-	counter, err := dbCreateCounter()
+func (s server) createCounter(c *gin.Context) {
+	counter, err := s.dbCreateCounter()
 
 	if err != nil {
 		log.Println(err)
@@ -45,10 +46,10 @@ func createCounter(c *gin.Context) {
 }
 
 // getCounterByID locates the counter with the id sent in by the request.
-func getCounterByID(c *gin.Context) {
+func (s server) getCounterByID(c *gin.Context) {
 	id := c.Param("id")
 
-	counter, err := dbGetCounterById(id)
+	counter, err := s.dbGetCounterById(id)
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "counter not found"})
@@ -59,10 +60,10 @@ func getCounterByID(c *gin.Context) {
 
 // incrementCounter locates the counter with the id sent in by the request and increments
 // its value by one.
-func incrementCounter(c *gin.Context) {
+func (s server) incrementCounter(c *gin.Context) {
 	id := c.Param("id")
 
-	counter, err := dbIncrementCounter(id)
+	counter, err := s.dbIncrementCounter(id)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotModified, gin.H{"message": "counter not found"})
 	}
@@ -71,10 +72,10 @@ func incrementCounter(c *gin.Context) {
 }
 
 // deleteCounter locates the counter with the id sent in by the request and deletes it.
-func deleteCounter(c *gin.Context) {
+func (s server) deleteCounter(c *gin.Context) {
 	id := c.Param("id")
 
-	counter, err := dbDeleteCounter(id)
+	counter, err := s.dbDeleteCounter(id)
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "counter not found"})

@@ -5,13 +5,17 @@ import (
 )
 
 func main() {
-	err := dbInit()
+	db, err := dbInit()
 
 	if err != nil {
 		log.Println(err.Error())
 	}
 
-	router := setupRouter()
+	s := &server{
+		db: db,
+	}
+
+	router := setupRouter(s)
 
 	router.LoadHTMLGlob("templates/*")
 

@@ -2,7 +2,7 @@ package main
 
 import "github.com/gin-gonic/gin"
 
-func setupRouter() *gin.Engine {
+func setupRouter(s *server) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -13,12 +13,12 @@ func setupRouter() *gin.Engine {
 		"robert": "password",
 	}))
 
-	authorized.GET("/", showIndexPage)
-	authorized.GET("/counters", getCounters)
-	authorized.GET("/counter/:id", getCounterByID)
-	authorized.POST("/counter", createCounter)
-	authorized.POST("/counter/:id", incrementCounter)
-	authorized.DELETE("/counter/:id", deleteCounter)
+	authorized.GET("/", s.index)
+	authorized.GET("/counters", s.getCounters)
+	authorized.GET("/counter/:id", s.getCounterByID)
+	authorized.POST("/counter", s.createCounter)
+	authorized.POST("/counter/:id", s.incrementCounter)
+	authorized.DELETE("/counter/:id", s.deleteCounter)
 
 	return r
 }
